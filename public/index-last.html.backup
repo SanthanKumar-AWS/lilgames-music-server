@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>LilGames Music Room</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        Arial,
+        sans-serif;
+
+    color: #f8fafc;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #14213a 0,
+            #0b1220 45%,
+            #070d18 100%
+        );
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+}
+
+.container {
+
+    width: 100%;
+
+    max-width: 650px;
+
+}
+
+.card {
+
+    background: rgba(17, 28, 46, .96);
+
+    border: 1px solid #263750;
+
+    border-radius: 18px;
+
+    padding: 35px;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.4);
+
+}
+
+.logo {
+
+    text-align: center;
+
+    font-size: 28px;
+
+    font-weight: 800;
+
+    margin-bottom: 8px;
+
+}
+
+.logo span {
+
+    color: #38bdf8;
+
+}
+
+.subtitle {
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    margin-bottom: 30px;
+
+}
+
+input {
+
+    width: 100%;
+
+    padding: 14px;
+
+    margin-bottom: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid #263750;
+
+    background: #091321;
+
+    color: white;
+
+    font-size: 15px;
+
+    outline: none;
+
+}
+
+input:focus {
+
+    border-color: #38bdf8;
+
+}
+
+button {
+
+    width: 100%;
+
+    padding: 14px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+}
+
+.create {
+
+    background: #38bdf8;
+
+    color: #06111d;
+
+}
+
+.join {
+
+    background: #2563eb;
+
+    color: white;
+
+    margin-top: 10px;
+
+}
+
+.divider {
+
+    text-align: center;
+
+    color: #64748b;
+
+    margin: 20px 0;
+
+}
+
+.error {
+
+    color: #f87171;
+
+    margin-top: 15px;
+
+    text-align: center;
+
+}
+
+#roomScreen {
+
+    display: none;
+
+}
+
+.room-code {
+
+    text-align: center;
+
+    font-size: 34px;
+
+    font-weight: 900;
+
+    letter-spacing: 5px;
+
+    color: #38bdf8;
+
+    margin: 15px 0 5px;
+
+}
+
+.organizer {
+
+    text-align: center;
+
+    color: #facc15;
+
+    font-size: 13px;
+
+    margin-bottom: 25px;
+
+}
+
+.section {
+
+    margin-top: 20px;
+
+    padding: 15px;
+
+    background: #0b1627;
+
+    border-radius: 12px;
+
+}
+
+.section-title {
+
+    font-weight: 800;
+
+    margin-bottom: 12px;
+
+}
+
+.user {
+
+    padding: 8px 0;
+
+    border-bottom: 1px solid #1e293b;
+
+}
+
+.user:last-child {
+
+    border-bottom: 0;
+
+}
+
+.leave {
+
+    background: #475569;
+
+    color: white;
+
+    margin-top: 20px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<div id="lobby">
+
+    <div class="logo">
+        🎵 <span>LilGames</span> Music
+    </div>
+
+    <div class="subtitle">
+        Create a room and listen together.
+    </div>
+
+    <input
+        id="username"
+        placeholder="Your username"
+        maxlength="20"
+        autocomplete="off">
+
+    <button
+        class="create"
+        onclick="createRoom()">
+
+        🎵 CREATE MUSIC ROOM
+
+    </button>
+
+    <div class="divider">
+        OR JOIN AN EXISTING ROOM
+    </div>
+
+    <input
+        id="roomCode"
+        placeholder="Enter room code"
+        maxlength="6"
+        autocomplete="off"
+        style="text-transform:uppercase">
+
+    <button
+        class="join"
+        onclick="joinRoom()">
+
+        🚪 JOIN ROOM
+
+    </button>
+
+    <div
+        id="error"
+        class="error">
+    </div>
+
+</div>
+
+
+<div id="roomScreen">
+
+    <div class="logo">
+        🎵 <span>LilGames</span> Music
+    </div>
+
+    <div class="room-code"
+         id="roomCodeDisplay">
+    </div>
+
+    <div
+        class="organizer"
+        id="organizerText">
+    </div>
+
+    <div class="section">
+
+        <div class="section-title">
+            👥 People in Room
+        </div>
+
+        <div id="users"></div>
+
+    </div>
+
+    <div class="section">
+
+        <div class="section-title">
+            🎵 Add Music
+        </div>
+
+        <div style="display:flex;gap:8px;">
+
+            <input
+                id="musicSearch"
+                placeholder="Search songs or artists..."
+                autocomplete="off"
+                style="margin:0;">
+
+            <button
+                onclick="searchMusic()"
+                style="
+                    width:auto;
+                    padding:14px 20px;
+                    background:#38bdf8;
+                    color:#06111d;
+                    white-space:nowrap;
+                ">
+                🔎 Search
+            </button>
+
+        </div>
+
+        <div id="searchResults"
+             style="margin-top:15px;">
+        </div>
+
+    </div>
+
+    <div class="section" id="playerSection">
+
+        <div class="section-title">
+            🎧 Now Playing
+        </div>
+
+        <div id="nowPlaying"
+             style="color:#94a3b8;margin-bottom:15px;">
+            Nothing playing.
+        </div>
+
+        <audio
+            id="audioPlayer"
+            controls
+            style="width:100%;">
+        </audio>
+
+        <div id="playerControls"
+             style="display:flex;gap:8px;margin-top:12px;">
+
+            <button
+                id="playButton"
+                onclick="playMusic()"
+                style="background:#38bdf8;color:#06111d;">
+                ▶ PLAY
+            </button>
+
+            <button
+                id="pauseButton"
+                onclick="pauseMusic()"
+                style="background:#475569;color:white;">
+                ⏸ PAUSE
+            </button>
+
+            <button
+                id="skipButton"
+                onclick="skipMusic()"
+                style="background:#2563eb;color:white;">
+                ⏭ SKIP
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="section">
+
+        <div class="section-title">
+            🎶 Music Queue
+        </div>
+
+        <div id="musicQueue">
+
+            <div style="color:#94a3b8">
+                No songs in the queue.
+            </div>
+
+        </div>
+
+    </div>
+
+    <button
+        class="leave"
+        onclick="leaveRoom()">
+
+        LEAVE ROOM
+
+    </button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let socket = null;
+
+let currentRoom = null;
+
+let isOrganizer = false;
+
+
+/*
+=========================================
+CONNECT
+=========================================
+*/
+
+function connect() {
+
+    return new Promise((resolve, reject) => {
+
+        const protocol =
+            location.protocol === "https:"
+                ? "wss:"
+                : "ws:";
+
+        socket = new WebSocket(
+            protocol +
+            "//" +
+            location.host +
+            "/music-ws/"
+        );
+
+        socket.onopen = () => {
+
+            resolve();
+
+        };
+
+        socket.onerror = () => {
+
+            reject(
+                new Error(
+                    "Unable to connect to music server."
+                )
+            );
+
+        };
+
+        socket.onmessage = (event) => {
+
+            handleMessage(
+                JSON.parse(event.data)
+            );
+
+        };
+
+        socket.onclose = () => {
+
+            socket = null;
+
+        };
+
+    });
+
+}
+
+
+/*
+=========================================
+CREATE ROOM
+=========================================
+*/
+
+async function createRoom() {
+
+    const username =
+        document
+            .getElementById("username")
+            .value
+            .trim();
+
+    if (!username) {
+
+        showError(
+            "Enter your username."
+        );
+
+        return;
+    }
+
+    try {
+
+        await connect();
+
+        socket.send(
+            JSON.stringify({
+                type: "create_room",
+                username
+            })
+        );
+
+    } catch (error) {
+
+        showError(
+            error.message
+        );
+
+    }
+
+}
+
+
+/*
+=========================================
+JOIN ROOM
+=========================================
+*/
+
+async function joinRoom() {
+
+    const username =
+        document
+            .getElementById("username")
+            .value
+            .trim();
+
+    const roomCode =
+        document
+            .getElementById("roomCode")
+            .value
+            .trim()
+            .toUpperCase();
+
+    if (!username) {
+
+        showError(
+            "Enter your username."
+        );
+
+        return;
+    }
+
+    if (!roomCode) {
+
+        showError(
+            "Enter the room code."
+        );
+
+        return;
+    }
+
+    try {
+
+        await connect();
+
+        socket.send(
+            JSON.stringify({
+                type: "join_room",
+                username,
+                roomCode
+            })
+        );
+
+    } catch (error) {
+
+        showError(
+            error.message
+        );
+
+    }
+
+}
+
+
+/*
+=========================================
+HANDLE SERVER MESSAGES
+=========================================
+*/
+
+function handleMessage(data) {
+
+    console.log(
+        "Music Server:",
+        data
+    );
+
+    if (data.type === "room_created") {
+
+        enterRoom(
+            data
+        );
+
+        return;
+    }
+
+    if (data.type === "room_joined") {
+
+        enterRoom(
+            data
+        );
+
+        if (data.queue) {
+            updateMusicQueue(data.queue);
+        }
+
+        if (data.currentSong) {
+
+            handleMusicState({
+                currentSong: data.currentSong,
+                playing: data.playing,
+                position: data.position
+            });
+
+        }
+
+        return;
+    }
+
+    if (data.type === "users_updated") {
+
+        updateUsers(
+            data.users
+        );
+
+        return;
+    }
+
+    if (data.type === "queue_updated") {
+
+        updateMusicQueue(
+            data.queue
+        );
+
+        return;
+    }
+
+    if (data.type === "music_state") {
+
+        handleMusicState(
+            data
+        );
+
+        return;
+    }
+
+    if (data.type === "prepare_music") {
+
+        prepareMusic(
+            data
+        );
+
+        return;
+    }
+
+    if (data.type === "organizer_changed") {
+
+        isOrganizer = true;
+
+        document
+            .getElementById("organizerText")
+            .textContent =
+            "👑 You are now the organizer";
+
+        return;
+    }
+
+    if (data.type === "error") {
+
+        showError(
+            data.message
+        );
+
+        return;
+    }
+
+}
+
+
+/*
+=========================================
+ENTER ROOM
+=========================================
+*/
+
+function enterRoom(data) {
+
+    currentRoom =
+        data.roomCode;
+
+    isOrganizer =
+        data.organizer;
+
+    document
+        .getElementById("lobby")
+        .style.display = "none";
+
+    document
+        .getElementById("roomScreen")
+        .style.display = "block";
+
+    document
+        .getElementById("roomCodeDisplay")
+        .textContent =
+        data.roomCode;
+
+    document
+        .getElementById("organizerText")
+        .textContent =
+        isOrganizer
+            ? "👑 You are the organizer"
+            : "🎧 You are listening";
+
+    updateUsers(
+        data.users
+    );
+
+}
+
+
+/*
+=========================================
+UPDATE USERS
+=========================================
+*/
+
+function updateUsers(users) {
+
+    const container =
+        document.getElementById("users");
+
+    container.innerHTML = "";
+
+    users.forEach(user => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "user";
+
+        div.textContent =
+            (user.organizer ? "👑 " : "🎧 ") +
+            user.username;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+/*
+=========================================
+LEAVE
+=========================================
+*/
+
+function leaveRoom() {
+
+    if (socket &&
+        socket.readyState === WebSocket.OPEN) {
+
+        socket.send(
+            JSON.stringify({
+                type: "leave_room"
+            })
+        );
+
+        socket.close();
+
+    }
+
+    socket = null;
+
+    currentRoom = null;
+
+    isOrganizer = false;
+
+    document
+        .getElementById("roomScreen")
+        .style.display = "none";
+
+    document
+        .getElementById("lobby")
+        .style.display = "block";
+
+}
+
+
+/*
+=========================================
+ERROR
+=========================================
+*/
+
+
+/*
+=========================================
+AUDIOUS SEARCH
+=========================================
+*/
+
+async function searchMusic() {
+
+    const input =
+        document.getElementById("musicSearch");
+
+    const results =
+        document.getElementById("searchResults");
+
+    const query =
+        input.value.trim();
+
+    if (!query) {
+
+        results.innerHTML =
+            '<div style="color:#f87171">Enter a song or artist.</div>';
+
+        return;
+    }
+
+    results.innerHTML =
+        '<div style="color:#94a3b8">Searching...</div>';
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/search?q=" +
+                encodeURIComponent(query)
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Search failed."
+            );
+
+        }
+
+        if (!data.results ||
+            data.results.length === 0) {
+
+            results.innerHTML =
+                '<div style="color:#94a3b8">No results found.</div>';
+
+            return;
+        }
+
+        results.innerHTML = "";
+
+        window.lastSearchResults = data.results;
+
+        data.results.forEach(track => {
+
+            const item =
+                document.createElement("div");
+
+            item.style.cssText = `
+                display:flex;
+                align-items:center;
+                gap:12px;
+                padding:10px 0;
+                border-bottom:1px solid #1e293b;
+            `;
+
+            const artwork =
+                track.artwork
+                    ? `<img src="${track.artwork}"
+                         style="
+                            width:55px;
+                            height:55px;
+                            border-radius:8px;
+                            object-fit:cover;
+                         ">`
+                    : `
+                        <div style="
+                            width:55px;
+                            height:55px;
+                            border-radius:8px;
+                            background:#172033;
+                            display:flex;
+                            align-items:center;
+                            justify-content:center;
+                            font-size:24px;
+                        ">
+                            🎵
+                        </div>
+                    `;
+
+            item.innerHTML = `
+
+                ${artwork}
+
+                <div style="
+                    flex:1;
+                    min-width:0;
+                ">
+
+                    <div style="
+                        font-weight:700;
+                        white-space:nowrap;
+                        overflow:hidden;
+                        text-overflow:ellipsis;
+                    ">
+                        ${escapeHtml(track.title)}
+                    </div>
+
+                    <div style="
+                        color:#94a3b8;
+                        font-size:13px;
+                        margin-top:3px;
+                    ">
+                        ${escapeHtml(track.artist)}
+                    </div>
+
+                </div>
+
+                <div style="
+                    display:flex;
+                    gap:6px;
+                    flex-shrink:0;
+                ">
+
+                    <button
+                        onclick="playTrack('${track.id}')"
+                        style="
+                            width:auto;
+                            padding:9px 12px;
+                            background:#38bdf8;
+                            color:#06111d;
+                        ">
+                        ▶ Play
+                    </button>
+
+                    <button
+                        onclick="addToQueue('${track.id}')"
+                        style="
+                            width:auto;
+                            padding:9px 12px;
+                            background:#2563eb;
+                            color:white;
+                        ">
+                        + Queue
+                    </button>
+
+                </div>
+
+            `;
+
+            results.appendChild(item);
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        results.innerHTML =
+            '<div style="color:#f87171">Unable to search music.</div>';
+
+    }
+
+}
+
+
+function escapeHtml(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        value || "";
+
+    return div.innerHTML;
+
+}
+
+
+/*
+=========================================
+AUDIOUS PLAYER
+=========================================
+*/
+
+let currentSong = null;
+let musicQueue = [];
+let musicPlaying = false;
+
+
+/*
+=========================================
+PLAY TRACK DIRECTLY
+=========================================
+*/
+
+function playTrack(trackId) {
+
+    if (!socket ||
+        socket.readyState !== WebSocket.OPEN) {
+
+        showError("Not connected to the music room.");
+
+        return;
+    }
+
+    if (!isOrganizer) {
+
+        showError(
+            "Only the organizer can start music."
+        );
+
+        return;
+    }
+
+    const track =
+        window.lastSearchResults
+            ?.find(
+                item =>
+                    String(item.id) === String(trackId)
+            );
+
+    if (!track) {
+
+        showError(
+            "Unable to find this track."
+        );
+
+        return;
+    }
+
+    socket.send(
+        JSON.stringify({
+            type: "play_track",
+            trackId: track.id,
+            title: track.title,
+            artist: track.artist,
+            artwork: track.artwork,
+            duration: track.duration
+        })
+    );
+
+}
+
+
+/*
+=========================================
+ADD TO QUEUE
+=========================================
+*/
+
+function addToQueue(trackId) {
+
+    if (!socket ||
+        socket.readyState !== WebSocket.OPEN) {
+
+        showError("Not connected to the music room.");
+
+        return;
+    }
+
+    const trackElement =
+        document.querySelector(
+            `[data-track-id="${trackId}"]`
+        );
+
+    let track = null;
+
+    if (window.lastSearchResults) {
+
+        track =
+            window.lastSearchResults.find(
+                item => String(item.id) === String(trackId)
+            );
+
+    }
+
+    if (!track) {
+
+        showError("Unable to add this track.");
+
+        return;
+    }
+
+    socket.send(
+        JSON.stringify({
+            type: "add_to_queue",
+            trackId: track.id,
+            title: track.title,
+            artist: track.artist,
+            artwork: track.artwork,
+            duration: track.duration
+        })
+    );
+
+}
+
+
+/*
+=========================================
+PLAY MUSIC
+=========================================
+*/
+
+function playMusic() {
+
+    if (!currentSong) {
+        showError("No song selected.");
+        return;
+    }
+
+    if (!isOrganizer) {
+        showError("Only the organizer can control playback.");
+        return;
+    }
+
+    const audio =
+        document.getElementById("audioPlayer");
+
+    socket.send(
+        JSON.stringify({
+            type: "play_music",
+            position: audio.currentTime || 0
+        })
+    );
+
+}
+
+
+/*
+=========================================
+PAUSE MUSIC
+=========================================
+*/
+
+function pauseMusic() {
+
+    if (!isOrganizer) {
+        showError("Only the organizer can control playback.");
+        return;
+    }
+
+    const audio =
+        document.getElementById("audioPlayer");
+
+    socket.send(
+        JSON.stringify({
+            type: "pause_music",
+            position: audio.currentTime || 0
+        })
+    );
+
+}
+
+
+/*
+=========================================
+SKIP MUSIC
+=========================================
+*/
+
+function skipMusic() {
+
+    if (!isOrganizer) {
+        showError("Only the organizer can control playback.");
+        return;
+    }
+
+    socket.send(
+        JSON.stringify({
+            type: "skip_music"
+        })
+    );
+
+}
+
+
+/*
+=========================================
+HANDLE MUSIC STATE
+=========================================
+*/
+
+function handleMusicState(data) {
+
+    currentSong =
+        data.currentSong || null;
+
+    musicPlaying =
+        Boolean(data.playing);
+
+    const audio =
+        document.getElementById("audioPlayer");
+
+    const nowPlaying =
+        document.getElementById("nowPlaying");
+
+    if (!currentSong) {
+
+        audio.pause();
+
+        audio.removeAttribute("src");
+
+        nowPlaying.textContent =
+            "Nothing playing.";
+
+        return;
+    }
+
+    nowPlaying.innerHTML = `
+        <strong>${escapeHtml(currentSong.title)}</strong>
+        <div style="color:#94a3b8;margin-top:4px;">
+            ${escapeHtml(currentSong.artist)}
+        </div>
+    `;
+
+    /*
+     * Audius streaming endpoint.
+     */
+
+    const streamUrl =
+        "/api/stream/" +
+        encodeURIComponent(currentSong.id);
+
+    if (audio.dataset.trackId !== String(currentSong.id)) {
+
+        audio.dataset.trackId =
+            String(currentSong.id);
+
+        audio.src = streamUrl;
+
+        audio.load();
+
+        audio.addEventListener(
+            "loadedmetadata",
+            () => {
+
+                if (typeof data.position === "number") {
+                    audio.currentTime = data.position;
+                }
+
+                if (musicPlaying) {
+                    startAudioPlayback();
+                }
+
+            },
+            { once: true }
+        );
+
+    } else {
+
+        if (typeof data.position === "number") {
+
+            const difference =
+                Math.abs(
+                    audio.currentTime - data.position
+                );
+
+            if (difference > 1) {
+                audio.currentTime = data.position;
+            }
+
+        }
+
+        if (musicPlaying) {
+            startAudioPlayback();
+        } else {
+            audio.pause();
+        }
+
+    }
+
+}
+
+
+/*
+=========================================
+START AUDIO
+=========================================
+*/
+
+async function startAudioPlayback() {
+
+    const audio =
+        document.getElementById("audioPlayer");
+
+    try {
+
+        await audio.play();
+
+    } catch (error) {
+
+        console.warn(
+            "Browser blocked autoplay:",
+            error.message
+        );
+
+        showError(
+            "Press PLAY on the audio player to start music."
+        );
+
+    }
+
+}
+
+
+/*
+=========================================
+QUEUE DISPLAY
+=========================================
+*/
+
+function updateMusicQueue(queue) {
+
+    musicQueue =
+        Array.isArray(queue)
+            ? queue
+            : [];
+
+    const container =
+        document.getElementById("musicQueue");
+
+    if (!container) {
+        return;
+    }
+
+    if (musicQueue.length === 0) {
+
+        container.innerHTML =
+            '<div style="color:#94a3b8">No songs in the queue.</div>';
+
+        return;
+    }
+
+    container.innerHTML = "";
+
+    musicQueue.forEach((track, index) => {
+
+        const item =
+            document.createElement("div");
+
+        item.style.cssText = `
+            padding:10px 0;
+            border-bottom:1px solid #1e293b;
+        `;
+
+        item.innerHTML = `
+            <div style="font-weight:700;">
+                ${index + 1}. ${escapeHtml(track.title)}
+            </div>
+
+            <div style="
+                color:#94a3b8;
+                font-size:13px;
+                margin-top:3px;
+            ">
+                ${escapeHtml(track.artist)}
+            </div>
+        `;
+
+        container.appendChild(item);
+
+    });
+
+}
+
+function showError(message) {
+
+    document
+        .getElementById("error")
+        .textContent =
+        message;
+
+}
+
+</script>
+
+</body>
+
+</html>

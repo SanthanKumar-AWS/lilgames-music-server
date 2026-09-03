@@ -1,0 +1,475 @@
+require("dotenv").config();
+
+const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
+const path = require("path");
+
+const app = express();
+const server = http.createServer(app);
+
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+const axios = require("axios");
+
+const AUDIUS_API = "https://api.audius.co";
+app.use(express.static(path.join(__dirname, "public")));
+app.get("/api/search", async (req, res) => {
+
+    try {
+
+        const query =
+            String(req.query.q || "").trim();
+
+        if (!query) {
+            return res.status(400).json({
+                error: "Search query required."
+            });
+        }
+
+        const response = await axios.get(
+            `${AUDIUS_API}/v1/tracks/search`,
+            {
+                params: {
+                    query,
+                    limit: 10
+                }
+            }
+        );
+
+        const tracks =
+            (response.data.data || []).map(track => ({
+                id: track.id,
+                title: track.title,
+                artist:
+                    track.user?.name ||
+                    track.user?.handle ||
+                    "Unknown Artist",
+                duration: track.duration,
+                artwork:
+                    track.artwork?.["150x150"] ||
+                    track.artwork?.["480x480"] ||
+                    null
+            }));
+
+        res.json({
+            results: tracks
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Audius search error:",
+            error.message
+        );
+
+        res.status(500).json({
+            error: "Unable to search music."
+        });
+
+    }
+
+});
+app.get("/health", (req, res) => {
+    res.json({
+        status: "ok",
+        service: "lilgames-music"
+    });
+});
+
+/*
+=========================================
+MUSIC ROOMS
+=========================================
+*/
+
+const musicRooms = new Map();
+
+function generateRoomCode() {
+
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let code;
+
+    do {
+
+        code = "";
+
+        for (let i = 0; i < 6; i++) {
+            code += chars[Math.floor(Math.random() * chars.length)];
+        }
+
+    } while (musicRooms.has(code));
+
+    return code;
+}
+
+function send(ws, data) {
+
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(data));
+    }
+
+}
+
+function broadcastRoom(roomCode, data) {
+
+    const room = musicRooms.get(roomCode);
+
+    if (!room) {
+        return;
+    }
+
+    room.users.forEach(user => {
+        send(user.ws, data);
+    });
+
+}
+
+function getRoomUsers(room) {
+
+    return Array.from(room.users.values()).map(user => ({
+        id: user.id,
+        username: user.username,
+        organizer: user.organizer
+    }));
+
+}
+
+/*
+=========================================
+WEBSOCKET
+=========================================
+*/
+
+const wss = new WebSocket.Server({
+    server,
+    path: "/music-ws/"
+});
+
+wss.on("connection", (ws) => {
+
+    console.log("Music client connected");
+
+    ws.id =
+        `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+    ws.roomCode = null;
+    ws.username = null;
+
+    send(ws, {
+        type: "connected"
+    });
+
+    ws.on("message", (raw) => {
+
+        let data;
+
+        try {
+
+            data = JSON.parse(raw.toString());
+
+        } catch (error) {
+
+            send(ws, {
+                type: "error",
+                message: "Invalid request."
+            });
+
+            return;
+        }
+
+        /*
+        =================================
+        CREATE ROOM
+        =================================
+        */
+
+        if (data.type === "create_room") {
+
+            if (ws.roomCode) {
+
+                send(ws, {
+                    type: "error",
+                    message: "You are already in a room."
+                });
+
+                return;
+            }
+
+            const username =
+                String(data.username || "").trim();
+
+            if (!username) {
+
+                send(ws, {
+                    type: "error",
+                    message: "Enter your username."
+                });
+
+                return;
+            }
+
+            const roomCode = generateRoomCode();
+
+            const room = {
+                code: roomCode,
+                organizerId: ws.id,
+                users: new Map(),
+                queue: [],
+                currentSong: null,
+                playing: false,
+                position: 0
+            };
+
+            room.users.set(ws.id, {
+                id: ws.id,
+                ws,
+                username,
+                organizer: true
+            });
+
+            musicRooms.set(roomCode, room);
+
+            ws.roomCode = roomCode;
+            ws.username = username;
+
+            send(ws, {
+                type: "room_created",
+                roomCode,
+                username,
+                organizer: true,
+                users: getRoomUsers(room)
+            });
+
+            console.log(
+                `Music room created: ${roomCode} by ${username}`
+            );
+
+            return;
+        }
+
+        /*
+        =================================
+        JOIN ROOM
+        =================================
+        */
+
+        if (data.type === "join_room") {
+
+            if (ws.roomCode) {
+
+                send(ws, {
+                    type: "error",
+                    message: "You are already in a room."
+                });
+
+                return;
+            }
+
+            const username =
+                String(data.username || "").trim();
+
+            const roomCode =
+                String(data.roomCode || "")
+                    .trim()
+                    .toUpperCase();
+
+            if (!username) {
+
+                send(ws, {
+                    type: "error",
+                    message: "Enter your username."
+                });
+
+                return;
+            }
+
+            if (!roomCode) {
+
+                send(ws, {
+                    type: "error",
+                    message: "Enter a room code."
+                });
+
+                return;
+            }
+
+            const room = musicRooms.get(roomCode);
+
+            if (!room) {
+
+                send(ws, {
+                    type: "error",
+                    message: "Room not found."
+                });
+
+                return;
+            }
+
+            room.users.set(ws.id, {
+                id: ws.id,
+                ws,
+                username,
+                organizer: false
+            });
+
+            ws.roomCode = roomCode;
+            ws.username = username;
+
+            send(ws, {
+                type: "room_joined",
+                roomCode,
+                username,
+                organizer: false,
+                users: getRoomUsers(room),
+                queue: room.queue,
+                currentSong: room.currentSong,
+                playing: room.playing,
+                position: room.position
+            });
+
+            broadcastRoom(roomCode, {
+                type: "users_updated",
+                users: getRoomUsers(room)
+            });
+
+            console.log(
+                `${username} joined music room ${roomCode}`
+            );
+
+            return;
+        }
+
+        /*
+        =================================
+        LEAVE ROOM
+        =================================
+        */
+
+        if (data.type === "leave_room") {
+
+            leaveRoom(ws);
+
+            return;
+        }
+
+        /*
+        =================================
+        UNKNOWN REQUEST
+        =================================
+        */
+
+        send(ws, {
+            type: "error",
+            message: "Unknown request."
+        });
+
+    });
+
+    ws.on("close", () => {
+
+        leaveRoom(ws);
+
+        console.log("Music client disconnected");
+
+    });
+
+    ws.on("error", (error) => {
+
+        console.error(
+            "Music WebSocket error:",
+            error.message
+        );
+
+    });
+
+});
+
+/*
+=========================================
+LEAVE ROOM FUNCTION
+=========================================
+*/
+
+function leaveRoom(ws) {
+
+    if (!ws.roomCode) {
+        return;
+    }
+
+    const roomCode = ws.roomCode;
+
+    const room = musicRooms.get(roomCode);
+
+    if (!room) {
+
+        ws.roomCode = null;
+        return;
+
+    }
+
+    room.users.delete(ws.id);
+
+    ws.roomCode = null;
+
+    /*
+    If organizer leaves, make another
+    user the new organizer.
+    */
+
+    if (room.organizerId === ws.id) {
+
+        const nextUser =
+            room.users.values().next().value;
+
+        if (nextUser) {
+
+            room.organizerId = nextUser.id;
+
+            nextUser.organizer = true;
+
+            send(nextUser.ws, {
+                type: "organizer_changed"
+            });
+
+        }
+
+    }
+
+    /*
+    Delete empty room.
+    */
+
+    if (room.users.size === 0) {
+
+        musicRooms.delete(roomCode);
+
+        console.log(
+            `Music room deleted: ${roomCode}`
+        );
+
+        return;
+    }
+
+    broadcastRoom(roomCode, {
+        type: "users_updated",
+        users: getRoomUsers(room)
+    });
+
+}
+
+/*
+=========================================
+START SERVER
+=========================================
+*/
+
+server.listen(PORT, "0.0.0.0", () => {
+
+    console.log(
+        `LilGames Music Server running on port ${PORT}`
+    );
+
+});

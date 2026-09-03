@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>LilGames Music Room</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    font-family:
+        Inter,
+        Arial,
+        sans-serif;
+
+    color: #f8fafc;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #14213a 0,
+            #0b1220 45%,
+            #070d18 100%
+        );
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+}
+
+.container {
+
+    width: 100%;
+
+    max-width: 650px;
+
+}
+
+.card {
+
+    background: rgba(17, 28, 46, .96);
+
+    border: 1px solid #263750;
+
+    border-radius: 18px;
+
+    padding: 35px;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.4);
+
+}
+
+.logo {
+
+    text-align: center;
+
+    font-size: 28px;
+
+    font-weight: 800;
+
+    margin-bottom: 8px;
+
+}
+
+.logo span {
+
+    color: #38bdf8;
+
+}
+
+.subtitle {
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    margin-bottom: 30px;
+
+}
+
+input {
+
+    width: 100%;
+
+    padding: 14px;
+
+    margin-bottom: 12px;
+
+    border-radius: 10px;
+
+    border: 1px solid #263750;
+
+    background: #091321;
+
+    color: white;
+
+    font-size: 15px;
+
+    outline: none;
+
+}
+
+input:focus {
+
+    border-color: #38bdf8;
+
+}
+
+button {
+
+    width: 100%;
+
+    padding: 14px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+}
+
+.create {
+
+    background: #38bdf8;
+
+    color: #06111d;
+
+}
+
+.join {
+
+    background: #2563eb;
+
+    color: white;
+
+    margin-top: 10px;
+
+}
+
+.divider {
+
+    text-align: center;
+
+    color: #64748b;
+
+    margin: 20px 0;
+
+}
+
+.error {
+
+    color: #f87171;
+
+    margin-top: 15px;
+
+    text-align: center;
+
+}
+
+#roomScreen {
+
+    display: none;
+
+}
+
+.room-code {
+
+    text-align: center;
+
+    font-size: 34px;
+
+    font-weight: 900;
+
+    letter-spacing: 5px;
+
+    color: #38bdf8;
+
+    margin: 15px 0 5px;
+
+}
+
+.organizer {
+
+    text-align: center;
+
+    color: #facc15;
+
+    font-size: 13px;
+
+    margin-bottom: 25px;
+
+}
+
+.section {
+
+    margin-top: 20px;
+
+    padding: 15px;
+
+    background: #0b1627;
+
+    border-radius: 12px;
+
+}
+
+.section-title {
+
+    font-weight: 800;
+
+    margin-bottom: 12px;
+
+}
+
+.user {
+
+    padding: 8px 0;
+
+    border-bottom: 1px solid #1e293b;
+
+}
+
+.user:last-child {
+
+    border-bottom: 0;
+
+}
+
+.leave {
+
+    background: #475569;
+
+    color: white;
+
+    margin-top: 20px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<div id="lobby">
+
+    <div class="logo">
+        🎵 <span>LilGames</span> Music
+    </div>
+
+    <div class="subtitle">
+        Create a room and listen together.
+    </div>
+
+    <input
+        id="username"
+        placeholder="Your username"
+        maxlength="20"
+        autocomplete="off">
+
+    <button
+        class="create"
+        onclick="createRoom()">
+
+        🎵 CREATE MUSIC ROOM
+
+    </button>
+
+    <div class="divider">
+        OR JOIN AN EXISTING ROOM
+    </div>
+
+    <input
+        id="roomCode"
+        placeholder="Enter room code"
+        maxlength="6"
+        autocomplete="off"
+        style="text-transform:uppercase">
+
+    <button
+        class="join"
+        onclick="joinRoom()">
+
+        🚪 JOIN ROOM
+
+    </button>
+
+    <div
+        id="error"
+        class="error">
+    </div>
+
+</div>
+
+
+<div id="roomScreen">
+
+    <div class="logo">
+        🎵 <span>LilGames</span> Music
+    </div>
+
+    <div class="room-code"
+         id="roomCodeDisplay">
+    </div>
+
+    <div
+        class="organizer"
+        id="organizerText">
+    </div>
+
+    <div class="section">
+
+        <div class="section-title">
+            👥 People in Room
+        </div>
+
+        <div id="users"></div>
+
+    </div>
+
+    <div class="section">
+
+        <div class="section-title">
+            🎶 Music Queue
+        </div>
+
+        <div style="color:#94a3b8">
+            YouTube music queue will appear here.
+        </div>
+
+    </div>
+
+    <button
+        class="leave"
+        onclick="leaveRoom()">
+
+        LEAVE ROOM
+
+    </button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+let socket = null;
+
+let currentRoom = null;
+
+let isOrganizer = false;
+
+
+/*
+=========================================
+CONNECT
+=========================================
+*/
+
+function connect() {
+
+    return new Promise((resolve, reject) => {
+
+        const protocol =
+            location.protocol === "https:"
+                ? "wss:"
+                : "ws:";
+
+        socket = new WebSocket(
+            protocol +
+            "//" +
+            location.host +
+            "/music-ws/"
+        );
+
+        socket.onopen = () => {
+
+            resolve();
+
+        };
+
+        socket.onerror = () => {
+
+            reject(
+                new Error(
+                    "Unable to connect to music server."
+                )
+            );
+
+        };
+
+        socket.onmessage = (event) => {
+
+            handleMessage(
+                JSON.parse(event.data)
+            );
+
+        };
+
+        socket.onclose = () => {
+
+            socket = null;
+
+        };
+
+    });
+
+}
+
+
+/*
+=========================================
+CREATE ROOM
+=========================================
+*/
+
+async function createRoom() {
+
+    const username =
+        document
+            .getElementById("username")
+            .value
+            .trim();
+
+    if (!username) {
+
+        showError(
+            "Enter your username."
+        );
+
+        return;
+    }
+
+    try {
+
+        await connect();
+
+        socket.send(
+            JSON.stringify({
+                type: "create_room",
+                username
+            })
+        );
+
+    } catch (error) {
+
+        showError(
+            error.message
+        );
+
+    }
+
+}
+
+
+/*
+=========================================
+JOIN ROOM
+=========================================
+*/
+
+async function joinRoom() {
+
+    const username =
+        document
+            .getElementById("username")
+            .value
+            .trim();
+
+    const roomCode =
+        document
+            .getElementById("roomCode")
+            .value
+            .trim()
+            .toUpperCase();
+
+    if (!username) {
+
+        showError(
+            "Enter your username."
+        );
+
+        return;
+    }
+
+    if (!roomCode) {
+
+        showError(
+            "Enter the room code."
+        );
+
+        return;
+    }
+
+    try {
+
+        await connect();
+
+        socket.send(
+            JSON.stringify({
+                type: "join_room",
+                username,
+                roomCode
+            })
+        );
+
+    } catch (error) {
+
+        showError(
+            error.message
+        );
+
+    }
+
+}
+
+
+/*
+=========================================
+HANDLE SERVER MESSAGES
+=========================================
+*/
+
+function handleMessage(data) {
+
+    console.log(
+        "Music Server:",
+        data
+    );
+
+    if (data.type === "room_created") {
+
+        enterRoom(
+            data
+        );
+
+        return;
+    }
+
+    if (data.type === "room_joined") {
+
+        enterRoom(
+            data
+        );
+
+        return;
+    }
+
+    if (data.type === "users_updated") {
+
+        updateUsers(
+            data.users
+        );
+
+        return;
+    }
+
+    if (data.type === "organizer_changed") {
+
+        isOrganizer = true;
+
+        document
+            .getElementById("organizerText")
+            .textContent =
+            "👑 You are now the organizer";
+
+        return;
+    }
+
+    if (data.type === "error") {
+
+        showError(
+            data.message
+        );
+
+        return;
+    }
+
+}
+
+
+/*
+=========================================
+ENTER ROOM
+=========================================
+*/
+
+function enterRoom(data) {
+
+    currentRoom =
+        data.roomCode;
+
+    isOrganizer =
+        data.organizer;
+
+    document
+        .getElementById("lobby")
+        .style.display = "none";
+
+    document
+        .getElementById("roomScreen")
+        .style.display = "block";
+
+    document
+        .getElementById("roomCodeDisplay")
+        .textContent =
+        data.roomCode;
+
+    document
+        .getElementById("organizerText")
+        .textContent =
+        isOrganizer
+            ? "👑 You are the organizer"
+            : "🎧 You are listening";
+
+    updateUsers(
+        data.users
+    );
+
+}
+
+
+/*
+=========================================
+UPDATE USERS
+=========================================
+*/
+
+function updateUsers(users) {
+
+    const container =
+        document.getElementById("users");
+
+    container.innerHTML = "";
+
+    users.forEach(user => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "user";
+
+        div.textContent =
+            (user.organizer ? "👑 " : "🎧 ") +
+            user.username;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+
+/*
+=========================================
+LEAVE
+=========================================
+*/
+
+function leaveRoom() {
+
+    if (socket &&
+        socket.readyState === WebSocket.OPEN) {
+
+        socket.send(
+            JSON.stringify({
+                type: "leave_room"
+            })
+        );
+
+        socket.close();
+
+    }
+
+    socket = null;
+
+    currentRoom = null;
+
+    isOrganizer = false;
+
+    document
+        .getElementById("roomScreen")
+        .style.display = "none";
+
+    document
+        .getElementById("lobby")
+        .style.display = "block";
+
+}
+
+
+/*
+=========================================
+ERROR
+=========================================
+*/
+
+function showError(message) {
+
+    document
+        .getElementById("error")
+        .textContent =
+        message;
+
+}
+
+</script>
+
+</body>
+
+</html>
