@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+music-server.log
+*.backup
+*.before-*
+Dockerfile
+.dockerignore
