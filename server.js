@@ -11,6 +11,11 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok" });
+});
+
 const axios = require("axios");
 
 const AUDIUS_API = "https://api.audius.co";
