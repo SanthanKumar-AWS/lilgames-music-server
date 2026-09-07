@@ -27,4 +27,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/lilgames-music-server:latest
+          tags: |
+                 ${{ secrets.DOCKERHUB_USERNAME }}/lilgames-music-server:latest
+                 ${{ secrets.DOCKERHUB_USERNAME }}/lilgames-music-server:${{ github.sha }}    
