@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 app.get("/health", (req, res) => {
-    res.status(200).json({ status: "ok",version:"v2" });
+    res.status(200).json({ status: "ok",version:"v3" });
 });
 
 const axios = require("axios");
